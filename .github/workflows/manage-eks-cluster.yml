@@ -1,0 +1,112 @@
+name: Manage EKS Cluster
+
+on:
+  workflow_dispatch:
+    inputs:
+      clusterName:
+        description: 'Name of the EKS cluster'
+        required: false
+        default: 'demo-test-app2-cluster'
+      awsRegion:
+        description: 'AWS Region for the cluster'
+        required: true
+      action:
+        description: 'Action to perform'
+        required: true
+      newRepoUrl:
+        description: 'URL of the newly created repository'
+        required: true
+
+jobs:
+  apply_cluster:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'apply' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.newRepoUrl }}
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.awsRegion }}
+
+      - name: Create ECR Repository
+        run: |
+          aws ecr create-repository --repository-name aws_backstage_ecr --region us-east-1 || echo "Repository already exists"
+          REPOSITORY_URI=$(aws ecr describe-repositories --repository-names aws_backstage_ecr --region us-east-1 --query 'repositories[0].repositoryUri' --output text)
+           echo "REPOSITORY_URI=$REPOSITORY_URI" >> $GITHUB_ENV
+      
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ env.REPOSITORY_URI }}
+      
+      - name: Build Docker image
+        run: docker build -t aws_backstage_ecr .
+      
+      - name: Tag and push image to ECR
+        run: | 
+          docker tag aws_backstage_ecr:latest ${{ env.REPOSITORY_URI }}:latest
+          docker push ${{ env.REPOSITORY_URI }}:latest
+
+      - name: Install eksctl
+        run: |
+          curl --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+          eksctl version
+
+      - name: Check if EKS Cluster Exists
+        id: check-cluster
+        run: |
+          if eksctl get cluster --name ${{ github.event.inputs.clusterName }} --region ${{ github.event.inputs.awsRegion }}; then
+            echo "EKS cluster exists."
+            echo "EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "EKS cluster does not exist."
+            echo "EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create EKS Cluster if Not Exists
+        if: env.EXISTS == 'false'
+        run: |
+          eksctl create cluster --name ${{ github.event.inputs.clusterName }} --region ${{ github.event.inputs.awsRegion }} --nodes 1 --managed
+      
+      - name: Update Kubernetes deployment file
+        run: |
+          sed -i "s|IMAGE_URI|${{ env.REPOSITORY_URI }}:latest|g" k8s_deployment.yaml
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name ${{ github.event.inputs.clusterName }} --region ${{ github.event.inputs.awsRegion }}
+          kubectl get nodes
+
+      - name: Deploy Application
+        run: |
+          kubectl apply -f k8s_deployment.yaml
+          kubectl get pods
+      
+      - name: Get EKS Cluster Info
+        id: eks-info
+        run: |
+          timeout=500
+          counter=0
+          while [ $counter -lt $timeout ]; do
+            LB_HOSTNAME=$(kubectl get svc my-app-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+            if [ ! -z "$LB_HOSTNAME" ]; then
+              echo "lb_url=$LB_HOSTNAME" >> $GITHUB_ENV
+              echo "deploymentUrl=http://$LB_HOSTNAME" >> $GITHUB_OUTPUT
+              echo "Deployed Application URL: http://$LB_HOSTNAME"
+              break
+            fi
+            echo "Waiting for LoadBalancer hostname... (${counter}s)"
+            sleep 10
+            counter=$((counter + 10))
+          done
+          if [ -z "$LB_HOSTNAME" ]; then
+            echo "deploymentUrl=LoadBalancer URL not found" >> $GITHUB_OUTPUT
+            exit 1
+          fi
