@@ -36,17 +36,15 @@ spec:
           type: string
           description: "Enter the email of the approver"
   steps:
-    - id: submit-request
-      name: Submit Request
-      action: roadiehq:utils:wait
+    - id: log-request
+      name: Log Request Data
+      action: debug:log
       input:
-        seconds: 5
-      output:
-        message: "Request submitted successfully!"
+        message: "Requester: ${{ parameters.requester }}"
 
     - id: wait-for-approval
       name: "Waiting for Approval"
-      action: roadiehq:utils:manual-approval
+      action: scaffolder:custom:manual-approval
       input:
         description: "Approve or reject the request"
         approvers:
