@@ -10,7 +10,7 @@ spec:
   parameters:
     - title: Request Details
       required:
-        - requester
+        - requestor
         - requestType
       properties:
         requestor:
