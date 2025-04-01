@@ -25,11 +25,11 @@ spec:
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: "${{ parameters.service_name }}"
+            name: ${{ parameters.service_name }}
             annotations:
               approval-status: "pending"
           spec:
-            owner: "${{ parameters.requestor }}"
+            owner: ${{ parameters.requestor }}
     - id: approval-wait
       action: custom:wait-for-approval  # Custom plugin to handle approvals
   output:
