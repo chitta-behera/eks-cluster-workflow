@@ -33,4 +33,4 @@ spec:
     - id: approval-wait
       action: custom:wait-for-approval  # Custom plugin to handle approvals
   output:
-    entityRef: "${{ steps['request-creation'].output.entityRef }}"
+    entityRef: ${{ steps['request-creation'].output.entityRef }}
