@@ -1,0 +1,37 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: request-approval
+  title: Request Approval
+  description: Submit a request for manager approval.
+spec:
+  owner: user:default/chitta.b
+  parameters:
+    - title: Request Details
+      required:
+        - description
+      properties:
+        requestor:
+          type: string
+        service_name:
+          type: string
+        description:
+          type: string
+          title: Request Description
+  steps:
+    - id: request-creation
+      action: catalog:register
+      input:
+        entity:
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
+          metadata:
+            name: "${{ parameters.service_name }}"
+            annotations:
+              approval-status: "pending"
+          spec:
+            owner: "${{ parameters.requestor }}"
+    - id: approval-wait
+      action: custom:wait-for-approval  # Custom plugin to handle approvals
+  output:
+    entityRef: "${{ steps['request-creation'].output.entityRef }}"
