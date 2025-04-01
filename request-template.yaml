@@ -9,30 +9,66 @@ spec:
   type: service
   parameters:
     - title: Request Details
+      required:
+        - requester
+        - requestType
       properties:
         requestor:
+          title: "Requester Name"
           type: string
-        service_name:
+          description: "Enter your name"
+        requestType:
+          title: "Request Type"
           type: string
+          enum:
+            - "VM Access Request"
+            - "Other"
+          description: "Select the type of request"
         description:
           type: string
           title: Request Description
+    - title: "Approval"
+      required:
+        - approver
+      properties:
+        approver:
+          title: "Approver Email"
+          type: string
+          description: "Enter the email of the approver"
   steps:
-    - id: request-creation
-      action: catalog:register
+    - id: submit-request
+      name: Submit Request
+      action: roadiehq:utils:wait
       input:
-        entity:
-          apiVersion: backstage.io/v1beta1
-          kind: Resource
-          metadata:
-            name: ${{ parameters.service_name }}
-            namespace: default
-            annotations:
-              approval-status: "pending"
-          spec:
-            type: service
-            owner: ${{ parameters.requestor }}
-    - id: approval-wait
-      action: custom:wait-for-approval  # Custom plugin to handle approvals
+        seconds: 5
+      output:
+        message: "Request submitted successfully!"
+
+    - id: wait-for-approval
+      name: "Waiting for Approval"
+      action: roadiehq:utils:manual-approval
+      input:
+        description: "Approve or reject the request"
+        approvers:
+          - "${{ parameters.approver }}"
+      output:
+        approved: true
+
+    - id: process-request
+      name: Process the Request
+      if: "${{ steps.wait-for-approval.output.approved }}"
+      action: roadiehq:utils:wait
+      input:
+        seconds: 5
+      output:
+        message: "Request approved! Proceeding with next steps."
+
+    - id: reject-request
+      name: Request Rejected
+      if: "${{ not steps.wait-for-approval.output.approved }}"
+      action: roadiehq:utils:fail
+      input:
+        message: "Request rejected. No further action taken."
+
   output:
-    entityRef: ${{ steps['request-creation'].output.entityRef }}
+    message: "Request completed successfully!"
