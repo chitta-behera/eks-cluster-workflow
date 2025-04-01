@@ -5,7 +5,8 @@ metadata:
   title: Request Approval
   description: Submit a request for manager approval.
 spec:
-  owner: user:default/chitta.b
+  owner: user:default/chitta
+  type: service
   parameters:
     - title: Request Details
       properties:
