@@ -8,8 +8,6 @@ spec:
   owner: user:default/chitta.b
   parameters:
     - title: Request Details
-      required:
-        - description
       properties:
         requestor:
           type: string
