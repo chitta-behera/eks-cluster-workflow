@@ -22,13 +22,15 @@ spec:
       action: catalog:register
       input:
         entity:
-          apiVersion: backstage.io/v1alpha1
+          apiVersion: backstage.io/v1beta1
           kind: Resource
           metadata:
             name: ${{ parameters.service_name }}
+            namespace: default
             annotations:
               approval-status: "pending"
           spec:
+            type: service
             owner: ${{ parameters.requestor }}
     - id: approval-wait
       action: custom:wait-for-approval  # Custom plugin to handle approvals
