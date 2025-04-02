@@ -43,9 +43,6 @@ spec:
         owner: chitta-behera
         repo: s3-workflow
         title: Approval needed for ${{ parameters.requestor }}
-        onApprove:
-          - action: debug:log
-            input:
-              message: "🚀 Approval received! Proceeding with execution."
+        
   output:
-    helloMessage: "Hello, ${{ parameters.requestor }}!"
+    helloMessage: "Your request has been approved and soon you will get the VD details..."
