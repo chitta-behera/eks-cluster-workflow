@@ -38,7 +38,7 @@ spec:
   steps:
     - id: approval-step
       name: Request Approval
-      action: approval:request
+      action: custom.helloWorld
       input:
         owner: chitta-behera
         repo: s3-workflow
