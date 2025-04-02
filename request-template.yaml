@@ -40,7 +40,7 @@ spec:
       name: Say Hello
       action: custom.helloWorld
       input:
-        name: ${{ parameters.name }}
+        name: ${{ parameters.requestor }}
 
   output:
-    helloMessage: "Hello, ${{ parameters.name }}!"
+    helloMessage: "Hello, ${{ parameters.requestor }}!"
