@@ -36,37 +36,11 @@ spec:
           type: string
           description: "Enter the email of the approver"
   steps:
-    - id: log-request
-      name: Log Request Data
-      action: debug:log
+    - id: greet
+      name: Say Hello
+      action: custom.helloWorld
       input:
-        message: "Requester: ${{ parameters.requester }}"
-
-    - id: wait-for-approval
-      name: "Waiting for Approval"
-      action: scaffolder:custom:manual-approval
-      input:
-        description: "Approve or reject the request"
-        approvers:
-          - "${{ parameters.approver }}"
-      output:
-        approved: true
-
-    - id: process-request
-      name: Process the Request
-      if: "${{ steps.wait-for-approval.output.approved }}"
-      action: roadiehq:utils:wait
-      input:
-        seconds: 5
-      output:
-        message: "Request approved! Proceeding with next steps."
-
-    - id: reject-request
-      name: Request Rejected
-      if: "${{ not steps.wait-for-approval.output.approved }}"
-      action: roadiehq:utils:fail
-      input:
-        message: "Request rejected. No further action taken."
+        name: ${{ parameters.name }}
 
   output:
-    message: "Request completed successfully!"
+    helloMessage: "Hello, ${{ parameters.name }}!"
