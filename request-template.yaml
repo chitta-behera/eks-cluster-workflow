@@ -47,8 +47,5 @@ spec:
           - action: debug:log
             input:
               message: "🚀 Approval received! Proceeding with execution."
-	    output:
-	      message: "Approval received! Proceeding with execution!!!"
-
   output:
     helloMessage: "Hello, ${{ parameters.requestor }}!"
