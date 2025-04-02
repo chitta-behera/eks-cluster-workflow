@@ -40,15 +40,15 @@ spec:
       name: Request Approval
       action: approval:request
       input:
-        owner: my-org
-        repo: my-repo
-        title: Approval needed for ${{ parameters.name }}
+        owner: chitta-behera
+        repo: s3-workflow
+        title: Approval needed for ${{ parameters.requestor }}
         onApprove:
           - action: debug:log
             input:
               message: "🚀 Approval received! Proceeding with execution."
-			      output:
-			        message: "Approval received! Proceeding with execution!!!"
+	    output:
+	      message: "Approval received! Proceeding with execution!!!"
 
   output:
     helloMessage: "Hello, ${{ parameters.requestor }}!"
