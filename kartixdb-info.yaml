@@ -26,24 +26,22 @@ spec:
           ui:autofocus: true  # This field gets auto-focused in UI
   # Steps that the template will execute in order
   steps:
-    # Fetch the base template
     - id: apply-resource
       name: Apply Kratix PostgreSQL Resource
-      action: shell:exec
+      action: kubernetes:apply
       input:
-        command: |
-          cat <<EOF | kubectl apply -f -
-          apiVersion: platform.kratix.io/v1alpha1
-          kind: postgresql
-          metadata:
-            name: example
-            namespace: default
-          spec:
-            env: dev
-            teamId: acme-org-team-a
-            dbName: ${{ parameters.name }}
-            backupEnabled: false
-          EOF
+        manifests:
+          - |
+            apiVersion: platform.kratix.io/v1alpha1
+            kind: postgresql
+            metadata:
+              name: example
+              namespace: default
+            spec:
+              env: dev
+              teamId: acme-org-team-a
+              dbName: ${{ parameters.name }}
+              backupEnabled: false
     
   # Output links to the user after the template execution
   output:
