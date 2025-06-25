@@ -17,7 +17,7 @@ spec:
     # Ask the user to input some basic app details
     - title: Fill in some steps
       required:
-        - dbname
+        - name
       properties:
         name:
           title: DB Name
@@ -41,7 +41,7 @@ spec:
           spec:
             env: dev
             teamId: acme-org-team-a
-            dbName: ${{ parameters.dbname }}
+            dbName: ${{ parameters.name }}
             backupEnabled: false
           EOF
     
