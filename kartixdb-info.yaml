@@ -1,0 +1,50 @@
+# Define the API version and kind of resource
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# Template metadata. Here's your intro to what this template does.
+metadata:
+  name: create-postgresql-db
+  title: Create PostgreSQL DB via Kratix
+  description: Creates a PostgreSQL DB using Kratix Promise
+# The specification for how the template behaves
+spec:
+  # Who owns this template. Generally, it could be a team or individual
+  owner: group:ADP-Project
+  # The type of service this template deploys
+  type: service
+  # User-input parameters. Makes your templates dynamic!
+  parameters:
+    # Ask the user to input some basic app details
+    - title: Fill in some steps
+      required:
+        - dbname
+      properties:
+        name:
+          title: DB Name
+          type: string
+          description: Unique name for your db
+          ui:autofocus: true  # This field gets auto-focused in UI
+  # Steps that the template will execute in order
+  steps:
+    # Fetch the base template
+    - id: apply-resource
+      name: Apply Kratix PostgreSQL Resource
+      action: shell:exec
+      input:
+        command: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: platform.kratix.io/v1alpha1
+          kind: postgresql
+          metadata:
+            name: example
+            namespace: default
+          spec:
+            env: dev
+            teamId: acme-org-team-a
+            dbName: ${{ parameters.dbname }}
+            backupEnabled: false
+          EOF
+    
+  # Output links to the user after the template execution
+  output:
+    message: "Database has been created via Kratix..."
