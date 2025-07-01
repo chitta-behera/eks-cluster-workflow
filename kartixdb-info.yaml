@@ -42,6 +42,11 @@ spec:
               teamId: acme-org-team-a
               dbName: ${{ parameters.name }}
               backupEnabled: false
+        kubeConfig:
+          # Use one of the following depending on your setup
+          # 1. Provide clusterRef:
+          clusterRef:
+            name: kind-platform
     
   # Output links to the user after the template execution
   output:
